@@ -73,7 +73,7 @@ class Array
   def find_index_after i, &b
     a = slice(i..-1)
     if x = a.find(&b)
-      x = a.index(b)
+      x = a.index(x)
       i + x
     else
       nil
@@ -146,6 +146,8 @@ def render raw, param
                         -$step,
                         -$leftmargin/2.0)
       end
+
+      #puts "(#{y} #{row[0..20].join ' '})"
 
       unless rowg.empty?
         res << rowg
