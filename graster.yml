@@ -1,11 +1,11 @@
 dpi: 500
 linestep: 1
-threshold: 1
+threshold: 32768
 leftmargin: 0.1
 bottommargin: 0.1
-feed: 200
+feed: 60
 greyscale: no
 zon: -0.001
 zoff: 0.001
-power: 0.2
+power: 1
 negative: no
