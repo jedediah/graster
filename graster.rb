@@ -71,7 +71,7 @@ end
 
 class Array
   def find_index_after i, &b
-    if x = slice(i..-1).find_index(&b)
+    if x = slice(i..-1).index(&b)
       i + x
     else
       nil
