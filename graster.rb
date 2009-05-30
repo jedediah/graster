@@ -47,7 +47,7 @@ def gx n, params
   res = "G#{n}"
   params.has_key?(:l) and res << " #{$laser_ctl[params[:l]?1:0]}"
   [:x,:y,:z,:w].each {|a| params[a] and res << " #{a.to_s.upcase}%.03f" % params[a] }
-  res << "\n"ba
+  res << "\n"
   res
 end
 
