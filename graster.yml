@@ -3,7 +3,7 @@ linestep: 1
 threshold: 128
 leftmargin: 1
 bottommargin: 1
-feed: 240
+feed: 120
 greyscale: no
 zon: -0.001
 zoff: 0.001
