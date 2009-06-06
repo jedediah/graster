@@ -12,7 +12,7 @@ rescue
   exit 1
 end
 
-$config = YAML.load_file("graster.yml") or raise "can't find graster.yml"
+$config = YAML.load_file(File.join(File.dirname(__FILE__), "graster.yml")) or raise "can't find graster.yml"
 
 $threshold = $config["threshold"].to_i
 $negative = $config["negative"]
