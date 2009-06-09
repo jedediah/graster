@@ -32,6 +32,9 @@ $whitefeed = $config["whitefeed"].to_f
 $greyscale = $config["greyscale"]
 $mask = $config["mask"]
 
+$tile_size = $config["tile_size"].map {|n| n && n.to_f }
+$tile_count = $config["tile_count"].map {|n| n.to_i }
+
 $laser_ctl = ["M63 P0","M62 P0"]
 # $laser_ctl = ["",""]
 
@@ -120,6 +123,22 @@ def make_spans xorig, pix, param, step
   return spans
 end
 
+def tile_spans spans, interval, count, forward
+  a = []
+  count.times do |tile|
+    offset = if forward
+               tile*interval
+             else
+               (count-1-tile)*interval
+             end
+
+    spans.each do |span|
+      a << span.map{|x| x + offset}
+    end
+  end
+  return a
+end
+
 def render_mask raw, param, gcode, gmask
   gcode.puts "(#{$filename} #{$width} x #{$height})\n(#{$config.inspect})"
   gcode.puts "M63 P0\nG61\nF#{$feed}"
@@ -128,38 +147,46 @@ def render_mask raw, param, gcode, gmask
   gmask.puts "1 0 0 0"
   forward = true
 
-  $height.times do |y|
-    row = raw[y*$width...(y+1)*$width]
-    yorig = $bottommargin + ($height-y)*$step
+  $tile_count[1].times do |tile|
+    $height.times do |y|
+      row = raw[y*$width...(y+1)*$width]
+      yorig = $bottommargin + tile*$tile_size[1] + ($height-y)*$step
 
-    if y % $linestep == 0
-      if forward
-        spans = make_spans($leftmargin,row,param,$step)
-        factor = 1
-        xop = 1
-      else
-        spans = make_spans($leftmargin + $width*$step,row.reverse,param,-$step)
-        factor = -1
-        xop = 0
-      end
-
-      unless spans.empty?
-        gcode.puts 'G0 X%0.3f Y%0.3f' % [spans[0][0]-factor*$leftmargin/2, yorig]
-        gcode.puts 'G1 X%0.3f' % [spans[-1][1]+factor*$leftmargin/2]
-
-        # wait until we are before the first span, then start the row
-        gmask.puts '0 0 %i %0.3f' % [1-xop,spans[0][0]-$step/2]
-
-        spans.each do |s|
-          gmask.puts '0 0 %i %0.3f' % [xop,s[0]-$step/2]
-          gmask.puts '0 1 %i %0.3f' % [xop,s[1]-$step/2]
+      if y % $linestep == 0
+        if forward
+          spans = tile_spans(make_spans($leftmargin,row,param,$step),
+                             $tile_size[0],
+                             $tile_count[0],
+                             forward)
+          factor = 1
+          xop = 1
+        else
+          spans = tile_spans(make_spans($leftmargin + $width*$step,row.reverse,param,-$step),
+                             $tile_size[0],
+                             $tile_count[0],
+                             forward)
+          factor = -1
+          xop = 0
         end
 
-        forward = !forward
-      end
+        unless spans.empty?
+          gcode.puts 'G0 X%0.3f Y%0.3f' % [spans[0][0]-factor*$leftmargin/2, yorig]
+          gcode.puts 'G1 X%0.3f' % [spans[-1][1]+factor*$leftmargin/2]
 
-    end
-  end
+          # wait until we are before the first span, then start the row
+          gmask.puts '0 0 %i %0.3f' % [1-xop,spans[0][0]-$step/2]
+
+          spans.each do |s|
+            gmask.puts '0 0 %i %0.3f' % [xop,s[0]-$step/2]
+            gmask.puts '0 1 %i %0.3f' % [xop,s[1]-$step/2]
+          end
+
+          forward = !forward
+        end
+
+      end # if y % linestep == 0
+    end # $height.times
+  end # $tile_count[1].times
 
   gcode.write "M5\nM2\n"
 end
@@ -168,34 +195,36 @@ def render raw, param
   res = "(#{$filename} #{$width} x #{$height})\n(#{$config.inspect})\nM63 P0\nG64\nF#{$feed}\nM3 S#{$power}\n"
   forward = true
 
-  $height.times do |y|
-    row = raw[y*$width...(y+1)*$width]
+  $tile_count[1].times do |tile|
+    $height.times do |y|
+      row = raw[y*$width...(y+1)*$width]
 
-    if y % $linestep == 0
-      if forward
-        rowg = draw_pix($leftmargin,
-                        $bottommargin + ($height-y)*$step,
-                        row,
-                        param,
-                        $step,
-                        $leftmargin/2.0)
-      else
-        rowg = draw_pix($leftmargin + $width*$step,
-                        $bottommargin + ($height-y)*$step,
-                        row.reverse,
-                        param,
-                        -$step,
-                        -$leftmargin/2.0)
-      end
+      if y % $linestep == 0
+        if forward
+          rowg = draw_pix($leftmargin,
+                          $bottommargin + tile*$tile_size[1] + ($height-y)*$step,
+                          row,
+                          param,
+                          $step,
+                          $leftmargin/2.0)
+        else
+          rowg = draw_pix($leftmargin + $width*$step,
+                          $bottommargin + tile*$tile_size[1] + ($height-y)*$step,
+                          row.reverse,
+                          param,
+                          -$step,
+                          -$leftmargin/2.0)
+        end
 
-      #puts "(#{y} #{row[0..20].join ' '})"
+        #puts "(#{y} #{row[0..20].join ' '})"
 
-      unless rowg.empty?
-        res << rowg
-        forward = !forward
-      end
-    end
-  end
+        unless rowg.empty?
+          res << rowg
+          forward = !forward
+        end
+      end # if y % $linestep == 0
+    end # $height.times
+  end # $tile_count[1].times
 
   res + "M5\nM2\n"
 end
@@ -208,6 +237,8 @@ def read_image filename
   image = image[0] or raise "unknown image format"
   $width = image.columns # "columns"? WTF??
   $height = image.rows
+  $tile_size[0] ||= $width*$step
+  $tile_size[1] ||= $height*$step
   $raw = image.export_pixels(0,0,$width,$height,"I").map{|x| x/256 }
 end
 
