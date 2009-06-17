@@ -177,6 +177,26 @@ class Graster
 
   ROOT2 = Math.sqrt(2)
 
+  OPTIONS = {
+    :dpi =>             [[Float],"X,Y","dots per inch of your device"],
+    :on_range =>        [[Float],"MIN,MAX","Luminosity range for which the laser should be on"],
+    :overshoot =>       [Float,"INCHES","Distance the X axis should travel past",
+                         "the outer boundaries of the outer images",
+                         "This needs to be wide enough so that the X axis",
+                         "doesn't start decelerating until after it has",
+                         "cleared the image"],
+    :offset =>          [[Float],"X,Y","location for the bottom left corner of the",
+                         "bottom left tile. The X component of this setting",
+                         "must be equal to or greater than overshoot"],
+    :repeat =>          [[Integer],"X,Y","Number of times to repeat the image in the X and Y axes,",
+                         "respectively. Size of the tile(s) inches. Any nil value",
+                         "is calculated from the size of the bitmap"],
+    :tile_spacing =>    [[Float],"X,Y","X,Y gap between repeated tiles in inches"],
+    :feed =>            [Float,"N","Speed to move the X axis while burning, in inches/minute"],
+    :cut_feed =>        [Float,"N","Speed at which to cut out tiles"],
+    :corner_radius =>   [Float,"N","Radius of rounded corners for cutout, 0 for pointy corners"]
+  }
+
   DEFAULTS = {
     :dpi => [500,500],                 # X,Y dots per inch of your device
     :on_range =>  [0.0,0.5],           # Luminosity range for which the laser should be on
@@ -221,6 +241,13 @@ class Graster
     return h
   end
 
+  def merge_config h
+    @config ||= DEFAULTS.dup
+    h.each {|k,v| @config[k] = v if DEFAULTS[k] }
+    update_config
+    return h
+  end
+
   attr_reader :config
 
   def image= img
@@ -238,7 +265,7 @@ class Graster
     if File.exist?(pn)
       c = {}
       YAML.load_file(pn).each {|k,v| c[k.intern] = v }
-      self.config = c
+      return c
     end
   end
 
@@ -247,7 +274,7 @@ class Graster
   end
 
   def load_config_file pn
-    raise "config file not found '#{pn}'" unless try_load_config_file pn
+    try_load_config_file pn or raise "config file not found '#{pn}'"
   end
 
   def load_image_file pn
@@ -363,7 +390,7 @@ class Graster
         move :x => left, :y => bottom
         nc :laser => false
       end
-    end        
+    end
   end
 
   # render gcode to cut out the tiles
@@ -415,15 +442,15 @@ class Graster
   end
 
   def initialize opts={}
-    if opts[:config]
-      self.config = opts[:config]
-    elsif opts[:config_file]
-      load_config_file opts[:config_file]
-    elsif opts[:default_config_file]
-      self.config = {} unless try_load_default_config_file
-    else
-      self.config = {} # loads defaults
+    self.config = DEFAULTS.dup
+      
+    if opts[:config_file]
+      self.merge_config load_config_file opts[:config_file]
+    elsif opts[:default_config_file] && c = try_load_default_config_file
+      self.merge_config c
     end
+
+    self.merge_config opts[:config] if opts[:config]
 
     @debug = opts[:debug]
 
@@ -455,12 +482,34 @@ if File.expand_path($PROGRAM_NAME) == File.expand_path(__FILE__)
     opts.on "-d", "--debug", "dump useless debug info" do
       options[:debug] = true
     end
+
+    Graster::OPTIONS.each do |key,info|
+      type,sym,*desc = info
+
+      if type.is_a? Array
+        cast = type[0].name.intern
+        type = Array
+      else
+        cast = type.name.intern
+      end
+
+      opts.on "--#{key.to_s.gsub /_/, '-'} #{sym}", type, *desc do |x|
+        options[:config] ||= {}
+        if type == Array
+          x = x.map {|s| Kernel.send(cast,s) }
+        else
+          x = Kernel.send(cast,x)
+        end
+
+        options[:config][key] = x
+      end
+    end
   end
 
   opts.parse! ARGV
 
   if options[:generate_config]
-    print Graster.new.config_to_yaml
+    print Graster.new(options).config_to_yaml
   else
     unless options[:image_file] = ARGV.shift
       puts opts
