@@ -87,7 +87,7 @@ class Graster
   class GcodeFile < File
     def preamble opts
       @laser = false
-      self << "M63 P0\nG61\nF#{opts[:feed] || 60}\nM3 S1\n"
+      self << "M63 P0\nG61\nF#{opts[:feed] || 60}\nM101\nM3 S1\n"
     end
 
     def epilogue
