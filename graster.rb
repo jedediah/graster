@@ -87,7 +87,9 @@ class Graster
   class GcodeFile < File
     def preamble opts
       @laser = false
-      self << "M63 P0\nG61\nF#{opts[:feed] || 60}\nM101\nM3 S1\n"
+      self << "M63 P0\nG61\nF#{opts[:feed] || 60}\n"
+      self << "M101\n" if opts[:mask]
+      self << "M3 S1\n"
     end
 
     def epilogue
@@ -336,7 +338,7 @@ class Graster
     gcode.comment "image: #{@image.filename} #{@image.size.inspect}"
     gcode.comment "config: #{@config.inspect}"
 
-    gcode.preamble :feed => @config[:feed]
+    gcode.preamble :feed => @config[:feed], :mask => true
     gmask.preamble
 
     @config[:repeat][1].times do |ytile|
