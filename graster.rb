@@ -1,7 +1,18 @@
 #!/usr/bin/env ruby
 
 require 'yaml'
-require 'RMagick'
+
+begin
+  require 'RMagick'
+  IMAGE_BACKEND = :rmagick
+#rescue LoadError
+#  require 'png'
+#  require 'png/reader'
+#  IMAGE_BACKEND = :png
+rescue LoadError
+  #raise LoadError.new "One of `png' or `RMagick' gems is required"
+  raise LoadError.new "`RMagick' gem is required"
+end
 
 class Graster
   class Image
@@ -16,13 +27,49 @@ class Graster
 
     PROPS.each{|p| attr_reader p }
 
-    def self.from_file pathname
-      raise "file not found #{pathname}" unless File.exist? pathname
-      img = Magick::Image.read(pathname)
-      raise "bad image data in #{pathname}" unless img = img[0]
-      new :filename => File.basename(pathname),
-          :size => [img.columns,img.rows],
-          :pixels => img.export_pixels(0,0,img.columns,img.rows,"I")
+    case IMAGE_BACKEND
+    when :rmagick
+      def self.from_file pathname
+        raise "file not found #{pathname}" unless File.exist? pathname
+        img = Magick::Image.read(pathname)
+        raise "bad image data in #{pathname}" unless img = img[0]
+        new :filename => File.basename(pathname),
+            :size => [img.columns,img.rows],
+            :pixels => img.export_pixels(0,0,img.columns,img.rows,"I")
+      end
+
+      # get pixel(s) from x,y coords
+      # 0,0 is bottom,left
+      # image[x,y]    => pixel at x,y
+      # image[y]      => row at y
+      def [] y, x=nil
+        if x
+          @pixels[(@size[1]-y)*@size[0]+x]
+        else
+          @pixels[(@size[1]-y)*@size[0],@size[0]]
+        end
+      end
+
+      def each_row &block
+        @pixels.chars.each_slice(@size[0]).each_with_index &block
+      end
+
+    when :png
+      def self.from_file pathname
+        raise "file not found #{pathname}" unless File.exist? pathname
+        png = PNG.load_file pathname
+        new :filename => File.basename(pathname),
+            :size => [png.width,png.height],
+            :pixels => png.data
+      end
+
+      def [] y, x=nil
+        # TODO
+      end
+
+      def each_row
+        # TODO
+      end
     end
 
     # "encode" a float 0..1 to a pixel
@@ -35,25 +82,11 @@ class Graster
       pix/65535.0
     end
 
-    # get pixel(s) from x,y coords
-    # 0,0 is bottom,left
-    # image[x,y]    => pixel at x,y
-    # image[y]      => row at y
-    def [] y, x=nil
-      if x
-        @pixels[(@size[1]-y)*@size[0]+x]
-      else
-        @pixels[(@size[1]-y)*@size[0],@size[0]]
-      end
-    end
-
-    def each_row &block
-      @pixels.chars.each_slice(@size[0]).each_with_index &block
-    end
 
     # convert bitmap data to spans (or runs) of contiguous pixels
     # also invert the Y axis
     def build_spans on_range
+      # TODO: rewrite in terms of each_row
       @spans = Array.new @size[1]
 
       @size[1].times do |y|
