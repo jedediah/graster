@@ -213,23 +213,39 @@ class Graster
   ROOT2 = Math.sqrt(2)
 
   OPTIONS = {
-    :dpi =>             [[Float],"X,Y","dots per inch of your device"],
-    :on_range =>        [[Float],"MIN,MAX","Luminosity range for which the laser should be on"],
-    :overshoot =>       [Float,"INCHES","Distance the X axis should travel past",
-                         "the outer boundaries of the outer images",
-                         "This needs to be wide enough so that the X axis",
-                         "doesn't start decelerating until after it has",
-                         "cleared the image"],
-    :offset =>          [[Float],"X,Y","location for the bottom left corner of the",
-                         "bottom left tile. The X component of this setting",
-                         "must be equal to or greater than overshoot"],
-    :repeat =>          [[Integer],"X,Y","Number of times to repeat the image in the X and Y axes,",
-                         "respectively. Size of the tile(s) inches. Any nil value",
-                         "is calculated from the size of the bitmap"],
-    :tile_spacing =>    [[Float],"X,Y","X,Y gap between repeated tiles in inches"],
-    :feed =>            [Float,"N","Speed to move the X axis while burning, in inches/minute"],
-    :cut_feed =>        [Float,"N","Speed at which to cut out tiles"],
-    :corner_radius =>   [Float,"N","Radius of rounded corners for cutout, 0 for pointy corners"]
+    :dpi =>             [[Float],"X,Y","Dots per inch of your device"],
+    :on_range =>        [[Float],
+      "MIN,MAX","Luminosity range for which the",
+      "laser should be on"],
+    :overshoot =>       [Float,"INCHES",
+      "Distance the X axis should travel",
+      "past the outer boundaries of the outer",
+      "images. This needs to be wide enough",
+      "so that the X axis doesn't start",
+      "decelerating until after it has",
+      "cleared the image"],
+    :offset =>          [[Float],"X,Y",
+      "Location for the bottom left corner",
+      "of the bottom left tile. The X",
+      "component of this setting must be",
+      "equal to or greater than overshoot"],
+    :repeat =>          [[Integer],"X,Y",
+      "Number of times to repeat the image",
+      "in the X and Y axes, respectively.",
+      "Size of the tile(s) inches. Any nil",
+      "value is calculated from the size of",
+      "the bitmap"],
+    :tile_spacing =>    [[Float],"X,Y",
+      "X,Y gap between repeated tiles in",
+      "inches"],
+    :feed =>            [Float,"N",
+      "Speed to move the X axis while",
+      "burning, in inches/minute"],
+    :cut_feed =>        [Float,"N",
+      "Speed at which to cut out tiles"],
+    :corner_radius =>   [Float,"N",
+      "Radius of rounded corners for",
+      "cutout, 0 for pointy corners"]
   }
 
   DEFAULTS = {
@@ -505,16 +521,16 @@ if File.expand_path($PROGRAM_NAME) == File.expand_path(__FILE__)
   opts = OptionParser.new do |opts|
     opts.banner = "Usage: graster [options] image"
 
-    opts.on "-c", "--config FILE", "use specified configuration file",
-                                   "  default is ./graster.yml" do |c|
+    opts.on "-c", "--config FILE", "Use specified configuration file.",
+                                   "The default is ./graster.yml" do |c|
       options[:config_file] = c
     end
 
-    opts.on "-g", "--generate", "generate a configuration file with defaults" do
+    opts.on "-g", "--generate", "generate a configuration file with","defaults" do
       options[:generate_config] = true
     end
 
-    opts.on "-d", "--debug", "dump useless debug info" do
+    opts.on "-d", "--debug", "Dump useless debug info" do
       options[:debug] = true
     end
 
