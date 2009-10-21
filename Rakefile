@@ -7,7 +7,7 @@ begin
     s.homepage = "http://github.com/joshbuddy/graster"
     s.authors = ["Jedediah Smith", "Joshua Hull"]
     s.files = FileList["[A-Z]*", "{lib,bin}/**/*"]
-    s.add_dependency 'RMagick'
+    s.add_dependency 'rmagick'
     s.rubyforge_project = 'graster'
   end
   Jeweler::GemcutterTasks.new
