@@ -173,7 +173,9 @@ class Graster
 
   def build_tiled_rows
     forward = false
-    @tiled_rows = @image.size[1].times.map {|y| tiled_row_spans y, (forward = !forward) }
+    @tiled_rows = []
+    @tiled_rows = @image.size[1].times {|y| @tiled_rows << tiled_row_spans(y, (forward = !forward)) }
+    @tiled_rows
   end
 
   # generate a unique id for this job

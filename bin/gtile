@@ -60,8 +60,8 @@ end # File.open
 
 print gcode(header)
 
-vert_count.times.map do |yc|
-  horiz_count.times.map do |xc|
+vert_count.times do |yc|
+  horiz_count.times do |xc|
     body.each do |nc|
       nc = nc.dup
       nc[:X] += xc*tile_width if nc[:X]
