@@ -161,7 +161,7 @@ class Graster
         end
       end
     else
-      @config[:repeat][0].times.reverse_each do |tile|
+      (0...@config[:repeat][0]).to_a.reverse.times do |tile|
         spans.reverse_each do |span|
           tiled_spans << [x_inches(tile,span[1]), x_inches(tile,span[0])]
         end
