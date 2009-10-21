@@ -73,9 +73,11 @@ class Graster
 
     if @image
       2.times {|i| @config[:tile_size][i] ||= @image.size[i]*@scale[i] }
-      @tile_interval = 2.times.map {|i|
-        @config[:tile_size][i] + @config[:tile_spacing][i]
+      @tile_interval = []
+      2.times {|i|
+        @tile_interval << @config[:tile_size][i] + @config[:tile_spacing][i]
       }
+      @tile_interval
     end
 
     @on_range = Range.new Image.f_to_pix(@config[:on_range].first),
