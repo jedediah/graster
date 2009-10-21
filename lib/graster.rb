@@ -161,8 +161,8 @@ class Graster
         end
       end
     else
-      (0...@config[:repeat][0]).to_a.reverse.times do |tile|
-        spans.reverse_each do |span|
+      (0...@config[:repeat][0]).to_a.reverse.each do |tile|
+        spans.reverse.each do |span|
           tiled_spans << [x_inches(tile,span[1]), x_inches(tile,span[0])]
         end
       end
@@ -174,8 +174,7 @@ class Graster
   def build_tiled_rows
     forward = false
     @tiled_rows = []
-    @tiled_rows = @image.size[1].times {|y| @tiled_rows << tiled_row_spans(y, (forward = !forward)) }
-    @tiled_rows
+    @image.size[1].times {|y| @tiled_rows << tiled_row_spans(y, (forward = !forward)) }
   end
 
   # generate a unique id for this job
@@ -197,7 +196,8 @@ class Graster
 
     @config[:repeat][1].times do |ytile|
       debug "begin tile row #{ytile}"
-      @tiled_rows.each_with_index do |spans, ypix|
+      ypix = 0
+      (0...@tiled_rows).each do |spans|
         debug "pixel row #{ypix} is empty" if spans.empty?
         unless spans.empty?
           yinches = y_inches(ytile, ypix)
@@ -211,6 +211,7 @@ class Graster
           gmask.begin_row forward
           spans.each {|span| gmask.span forward, span[0]+hyst, span[1]+hyst }
         end # unless spans.empty?
+        ypix += 1
       end # @image.each_row
       debug "end tile row #{ytile}"
     end # @config[:repeat][i].times
