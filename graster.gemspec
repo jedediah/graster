@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jedediah Smith", "Joshua Hull"]
-  s.date = %q{2009-10-20}
+  s.date = %q{2009-12-18}
   s.description = %q{G Raster!}
   s.email = %q{joshbuddy@gmail.com}
   s.executables = ["graster", "gtile"]
@@ -18,15 +18,15 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     "README.rdoc",
-     "Rakefile",
-     "VERSION",
-     "bin/graster",
-     "bin/gtile",
-     "lib/graster.rb",
-     "lib/graster/gcode_file.rb",
-     "lib/graster/gmask_file.rb",
-     "lib/graster/image.rb",
-     "lib/graster/runner.rb"
+    "Rakefile",
+    "VERSION",
+    "bin/graster",
+    "bin/gtile",
+    "lib/graster.rb",
+    "lib/graster/gcode_file.rb",
+    "lib/graster/gmask_file.rb",
+    "lib/graster/image.rb",
+    "lib/graster/runner.rb"
   ]
   s.homepage = %q{http://github.com/joshbuddy/graster}
   s.rdoc_options = ["--charset=UTF-8"]
