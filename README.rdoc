@@ -1,1 +1,20 @@
 = Graster
+
+This is a tool for doing high-quality laser etching with EMC2. It uses some fancy HAL scripting
+and a custom file format to accurately control the beam without affecting motion. This can't be done
+with g-code alone, as currently implemented in EMC, because the beam on/off commands will break up
+the movement commands and the EMC motion planner can't put them back together into continuous motion.
+Experience shows that this makes a huge difference when etching maleable materials like wood and acrylic.
+
+Graster uses a custom EMC configuration that is machine-specific and thus not included in this repository.
+A sample configuration for the Hacklab.TO laser can be found at:
+
+https://github.com/jedediah/hacklab-engraver
+
+At present, there is no generic distribution of this configuration, but it has been succesfully adapted
+to other machines with a bit of tweaking. Sharing such adaptations on Github or elsewhere would no doubt
+be appreciated by others.
+
+WARNING: You CANNOT touch-off for a Graster job. The HAL script works strictly in homed joint coordinates
+and will be very confused if the machine is in the wrong place. EMC limitations prevent this from being
+fixed or even detected.
