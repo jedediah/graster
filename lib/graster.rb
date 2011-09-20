@@ -5,14 +5,14 @@ require 'yaml'
 require 'RMagick'
 
 class Graster
-  
+
   autoload :Runner,    File.join(File.dirname(__FILE__), 'graster', 'runner')
   autoload :Image,     File.join(File.dirname(__FILE__), 'graster', 'image')
   autoload :GcodeFile, File.join(File.dirname(__FILE__), 'graster', 'gcode_file')
   autoload :GmaskFile, File.join(File.dirname(__FILE__), 'graster', 'gmask_file')
-  
+
   ROOT2 = Math.sqrt(2)
-  
+
   OPTIONS = {
     :dpi =>             [[Float],"X,Y","Dots per inch of your device"],
     :on_range =>        [[Float],
@@ -197,20 +197,20 @@ class Graster
     @config[:repeat][1].times do |ytile|
       debug "begin tile row #{ytile}"
       ypix = 0
-      (0...@tiled_rows).each do |spans|
-        debug "pixel row #{ypix} is empty" if spans.empty?
-        unless spans.empty?
+      (0...@tiled_rows.size).each do |spans|
+        debug "pixel row #{ypix} is empty" if @tiled_rows[spans].empty?
+        unless @tiled_rows[spans].empty?
           yinches = y_inches(ytile, ypix)
-          forward = spans[0][0] < spans[-1][1]
+          forward = @tiled_rows[spans][0][0] < spans[-1][1]
           dir = forward ? 1 : -1
 
-          debug "pixel row #{ypix} at #{yinches} inches going #{forward ? 'forward' : 'backward'} with #{spans.size} spans"
+          debug "pixel row #{ypix} at #{yinches} inches going #{forward ? 'forward' : 'backward'} with #{@tiled_rows[spans].size} spans"
 
-          gcode.g0 :x => spans[0][0] - dir*@config[:overshoot], :y => yinches
-          gcode.g1 :x => spans[-1][1] + dir*@config[:overshoot], :y => yinches
+          gcode.g0 :x => @tiled_rows[spans][0][0] - dir*@config[:overshoot], :y => yinches
+          gcode.g1 :x => @tiled_rows[spans][-1][1] + dir*@config[:overshoot], :y => yinches
           gmask.begin_row forward
-          spans.each {|span| gmask.span forward, span[0]+hyst, span[1]+hyst }
-        end # unless spans.empty?
+          @tiled_rows[spans].each {|span| gmask.span forward, span[0]+hyst, span[1]+hyst }
+        end # unless @tiled_rows[spans].empty?
         ypix += 1
       end # @image.each_row
       debug "end tile row #{ytile}"
@@ -300,7 +300,7 @@ class Graster
 
   def initialize opts={}
     self.config = DEFAULTS.dup
-      
+
     if opts[:config_file]
       self.merge_config load_config_file opts[:config_file]
     elsif opts[:default_config_file] && c = try_load_default_config_file
